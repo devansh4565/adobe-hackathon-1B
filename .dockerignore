@@ -1,0 +1,15 @@
+# Ignore git files
+.git
+.gitignore
+
+# Ignore python cache
+__pycache__/
+*.pyc
+
+# Ignore local input/output folders
+round1b_input/
+round1b_output/
+
+# Ignore other common project folders
+venv/
+.venv/
