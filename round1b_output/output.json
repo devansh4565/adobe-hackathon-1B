@@ -1,0 +1,11 @@
+{
+  "metadata": {
+    "input_documents": [],
+    "persona": "Test Researcher",
+    "job_to_be_done": "Test analysis",
+    "processing_timestamp": "2025-07-27T02:39:20.890145",
+    "error": "[WinError 3] The system cannot find the path specified: './round1b_input'"
+  },
+  "extracted_sections": [],
+  "subsection_analysis": []
+}

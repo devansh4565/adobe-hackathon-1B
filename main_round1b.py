@@ -7,6 +7,7 @@ Implements the complete four-stage pipeline for persona-driven document intellig
 import os
 import json
 import time
+import argparse
 import numpy as np
 from typing import List, Dict, Any
 from datetime import datetime
@@ -34,49 +35,72 @@ class PersonaDrivenDocumentIntelligence:
         
         print("✅ System initialized successfully!")
     
-    def read_input_files(self, input_dir: str) -> Dict[str, str]:
+    def get_persona_and_jbtd(self, persona: str = None, jbtd: str = None, input_dir: str = None) -> Dict[str, str]:
         """
-        Read input files: PDFs, persona, and job-to-be-done.
+        Get persona and job-to-be-done from multiple sources in priority order:
+        1. Command line arguments/function parameters
+        2. Environment variables
+        3. Input files (for backward compatibility)
+        4. Default values
         
         Args:
-            input_dir: Directory containing input files
+            persona: Persona text from command line
+            jbtd: Job-to-be-done text from command line
+            input_dir: Directory to check for input files (fallback)
             
         Returns:
             Dictionary with persona and jbtd text
         """
-        print("📁 Reading input files...")
+        print("📁 Getting persona and job-to-be-done...")
         
         persona_text = ""
         jbtd_text = ""
         
         try:
-            # Try different possible file names for persona
-            persona_files = ["persona.txt", "persona", "user_persona.txt"]
-            for persona_file in persona_files:
-                persona_path = os.path.join(input_dir, persona_file)
-                if os.path.exists(persona_path):
-                    with open(persona_path, 'r', encoding='utf-8') as f:
-                        persona_text = f.read().strip()
-                    print(f"✅ Read persona from {persona_file}: {persona_text[:100]}...")
-                    break
+            # Priority 1: Use provided parameters (command line args)
+            if persona and persona.strip():
+                persona_text = persona.strip()
+                print(f"✅ Using persona from command line: {persona_text[:100]}...")
+            elif os.getenv('PERSONA'):
+                # Priority 2: Environment variables
+                persona_text = os.getenv('PERSONA').strip()
+                print(f"✅ Using persona from environment: {persona_text[:100]}...")
+            elif input_dir:
+                # Priority 3: Try to read from files (backward compatibility)
+                persona_files = ["persona.txt", "persona", "user_persona.txt"]
+                for persona_file in persona_files:
+                    persona_path = os.path.join(input_dir, persona_file)
+                    if os.path.exists(persona_path):
+                        with open(persona_path, 'r', encoding='utf-8') as f:
+                            persona_text = f.read().strip()
+                        print(f"✅ Read persona from {persona_file}: {persona_text[:100]}...")
+                        break
             
             if not persona_text:
-                print("⚠️  No persona file found, using default")
+                # Priority 4: Default value
                 persona_text = "document analyst"
+                print("⚠️  Using default persona: document analyst")
             
-            # Try different possible file names for job-to-be-done
-            jbtd_files = ["job_to_be_done.txt", "job_to_be_done", "task.txt", "objective.txt"]
-            for jbtd_file in jbtd_files:
-                jbtd_path = os.path.join(input_dir, jbtd_file)
-                if os.path.exists(jbtd_path):
-                    with open(jbtd_path, 'r', encoding='utf-8') as f:
-                        jbtd_text = f.read().strip()
-                    print(f"✅ Read JBTD from {jbtd_file}: {jbtd_text[:100]}...")
-                    break
+            # Same priority order for job-to-be-done
+            if jbtd and jbtd.strip():
+                jbtd_text = jbtd.strip()
+                print(f"✅ Using JBTD from command line: {jbtd_text[:100]}...")
+            elif os.getenv('JBTD') or os.getenv('JOB_TO_BE_DONE'):
+                jbtd_text = (os.getenv('JBTD') or os.getenv('JOB_TO_BE_DONE')).strip()
+                print(f"✅ Using JBTD from environment: {jbtd_text[:100]}...")
+            elif input_dir:
+                jbtd_files = ["job_to_be_done.txt", "job_to_be_done", "task.txt", "objective.txt"]
+                for jbtd_file in jbtd_files:
+                    jbtd_path = os.path.join(input_dir, jbtd_file)
+                    if os.path.exists(jbtd_path):
+                        with open(jbtd_path, 'r', encoding='utf-8') as f:
+                            jbtd_text = f.read().strip()
+                        print(f"✅ Read JBTD from {jbtd_file}: {jbtd_text[:100]}...")
+                        break
             
             if not jbtd_text:
-                print("⚠️  No job-to-be-done file found, using default")
                 jbtd_text = "extract relevant information from documents"
+                print("⚠️  Using default JBTD: extract relevant information from documents")
             
             return {
                 'persona': persona_text,
@@ -84,8 +108,12 @@ class PersonaDrivenDocumentIntelligence:
             }
             
         except Exception as e:
-            print(f"❌ Error reading input files: {e}")
-            raise
+            print(f"❌ Error getting persona and JBTD: {e}")
+            # Return defaults on error
+            return {
+                'persona': "document analyst",
+                'jbtd': "extract relevant information from documents"
+            }
     
     def process_documents(self, input_dir: str, output_dir: str) -> List[Dict[str, Any]]:
         """
@@ -254,13 +282,15 @@ class PersonaDrivenDocumentIntelligence:
             print(f"❌ Error generating output: {e}")
             raise
     
-    def run_pipeline(self, input_dir: str, output_dir: str) -> Dict[str, Any]:
+    def run_pipeline(self, input_dir: str, output_dir: str, persona: str = None, jbtd: str = None) -> Dict[str, Any]:
         """
         Run the complete four-stage pipeline.
         
         Args:
             input_dir: Directory containing input files
             output_dir: Directory for output files
+            persona: Persona description (optional - will try multiple sources)
+            jbtd: Job-to-be-done description (optional - will try multiple sources)
             
         Returns:
             Complete analysis results
@@ -269,8 +299,8 @@ class PersonaDrivenDocumentIntelligence:
         print("🎯 Starting Persona-Driven Document Intelligence Pipeline...")
         
         try:
-            # Read input files
-            input_data = self.read_input_files(input_dir)
+            # Get persona and job-to-be-done from multiple sources
+            input_data = self.get_persona_and_jbtd(persona, jbtd, input_dir)
             persona_text = input_data['persona']
             jbtd_text = input_data['jbtd']
             
@@ -307,16 +337,84 @@ def main():
     """Main execution function."""
     import numpy as np
     
+    # Set up command line argument parsing
+    parser = argparse.ArgumentParser(
+        description="Adobe Hackathon Round 1B: Persona-Driven Document Intelligence",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Using command line arguments
+  python main_round1b.py --persona "PhD Researcher in Biology" --jbtd "Prepare literature review"
+  
+  # Using environment variables
+  export PERSONA="Investment Analyst"
+  export JBTD="Analyze revenue trends and market positioning"
+  python main_round1b.py
+  
+  # Using default values (will also check for input files)
+  python main_round1b.py
+        """
+    )
+    
+    parser.add_argument(
+        '--persona', '-p',
+        type=str,
+        default=None,
+        help='User persona description (e.g., "PhD Researcher in Computational Biology")'
+    )
+    
+    parser.add_argument(
+        '--jbtd', '--job-to-be-done', '-j',
+        type=str,
+        default=None,
+        help='Job-to-be-done description (e.g., "Prepare comprehensive literature review")'
+    )
+    
+    parser.add_argument(
+        '--input-dir', '-i',
+        type=str,
+        default=None,
+        help='Input directory path (default: ./input for local, /input for Docker)'
+    )
+    
+    parser.add_argument(
+        '--output-dir', '-o',
+        type=str,
+        default=None,
+        help='Output directory path (default: ./output for local, /output for Docker)'
+    )
+    
+    args = parser.parse_args()
+    
     # Configuration - use relative paths for local testing, absolute for Docker
     current_dir = os.getcwd()
-    if current_dir.startswith("/") or current_dir.startswith("C:"):
+    if args.input_dir:
+        INPUT_DIR = args.input_dir
+    elif current_dir.startswith("/") or current_dir.startswith("C:"):
         # Local environment
         INPUT_DIR = "./input"
-        OUTPUT_DIR = "./output"
     else:
         # Docker environment
         INPUT_DIR = "/input"
+    
+    if args.output_dir:
+        OUTPUT_DIR = args.output_dir
+    elif current_dir.startswith("/") or current_dir.startswith("C:"):
+        # Local environment
+        OUTPUT_DIR = "./output"
+    else:
+        # Docker environment
         OUTPUT_DIR = "/output"
+    
+    # Print configuration
+    print("🔧 Configuration:")
+    print(f"   Input Directory: {INPUT_DIR}")
+    print(f"   Output Directory: {OUTPUT_DIR}")
+    if args.persona:
+        print(f"   Persona: {args.persona}")
+    if args.jbtd:
+        print(f"   Job-to-be-Done: {args.jbtd}")
+    print()
     
     try:
         # Create output directory
@@ -325,8 +423,8 @@ def main():
         # Initialize the system
         system = PersonaDrivenDocumentIntelligence()
         
-        # Run the pipeline
-        results = system.run_pipeline(INPUT_DIR, OUTPUT_DIR)
+        # Run the pipeline with persona and jbtd arguments
+        results = system.run_pipeline(INPUT_DIR, OUTPUT_DIR, args.persona, args.jbtd)
         
         # Save results
         output_path = os.path.join(OUTPUT_DIR, "output.json")
@@ -342,13 +440,13 @@ def main():
             minimal_output = {
                 "metadata": {
                     "input_documents": [],
-                    "persona": "document analyst",
-                    "job_to_be_done": "extract relevant information",
+                    "persona": args.persona or os.getenv('PERSONA', 'document analyst'),
+                    "job_to_be_done": args.jbtd or os.getenv('JBTD', 'extract relevant information'),
                     "processing_timestamp": datetime.now().isoformat(),
                     "error": str(e)
                 },
                 "extracted_sections": [],
-                "sub-section_analysis": []
+                "subsection_analysis": []
             }
             
             output_path = os.path.join(OUTPUT_DIR, "output.json")
