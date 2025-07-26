@@ -1,103 +1,305 @@
-📄 Persona-Driven PDF Intelligence System
-An offline, CPU-only, Dockerized Python solution that extracts structured PDF content and ranks it for relevance based on persona-specific queries (e.g., "summary for a Product Manager"). Built for efficiency, interpretability, and extensibility.
-🔧 Overview
-This system provides a streamlined pipeline for understanding complex PDFs through the lens of specific professional personas. By inputting a PDF and a query, the system identifies and ranks the most relevant sections of the document for a given role, such as a Product Manager or Marketing Lead. The entire process is designed to run efficiently on CPU-only environments and is packaged within a Docker container for easy deployment and scalability.
-Features
-Intelligent PDF Segmentation: Extracts clean, structured text from PDFs by leveraging heading hierarchies.
-Semantic Relevance Scoring: Uses state-of-the-art sentence embeddings to find the most relevant content.
-Persona-Driven Queries: Tailors results to the needs of different professional roles.
-Offline & CPU-Only: Runs without requiring a GPU or an active internet connection.
-Dockerized: Encapsulated for consistent and reliable deployment.
-🔁 Modular Pipeline Breakdown
-The system operates through a sequential pipeline of four distinct modules:
-🧩 1. PDF Segmentation Module
-This module is responsible for ingesting a raw PDF and extracting its content in a structured manner.
-Process: It uses PyMuPDF for precise text extraction, identifying text blocks associated with headings (H1-H3). To enhance speed, page extraction is parallelized. If a document structure is not found, it defaults to page-by-page segmentation.
-Output: A JSON array of text chunks, each with its corresponding heading, level, and page number.
-🧠 2. Embedding + Semantic Representation
-This module transforms the text chunks and the user query into a format suitable for semantic comparison.
-Model: Utilizes the lightweight all-MiniLM-L6-v2 sentence-transformer model.
-Process: Encodes all text chunks and the persona-based query into dense vector embeddings. For development efficiency, embeddings can be cached.
-Output: A list of vector embeddings for the text chunks and a single embedding for the query.
-🎯 3. Multi-Level Relevance Scoring
-The core of the system, this module ranks the text chunks based on their relevance to the query.
-Process: It calculates the cosine similarity between the query embedding and each chunk embedding. To refine the results, it filters out very short text snippets and applies a soft boost to chunks where the heading text overlaps with the query.
-Output: A ranked list of the top N chunks with their relevance scores.
-📦 4. JSON Output Synthesizer
-The final module assembles the top-ranked sections into a clean, structured JSON output.
-Process: It combines the most relevant sections and formats them into a JSON object that includes the persona, the original query, and a list of the top-scoring sections with their titles and text. The output is validated against a predefined schema for consistency.
-Output: A structured JSON file ready for downstream applications.
-🐳 Docker Plan
-Directory Structure
-Generated plaintext
-project/
-├── app/
-│   ├── main.py
-│   ├── pdf_segmenter.py
-│   ├── embedder.py
-│   ├── scorer.py
-│   └── utils.py
-├── requirements.txt
-├── Dockerfile
-└── test/
-    └── sample.pdf
-Use code with caution.
-Dockerfile
-Generated dockerfile
-# Use a slim Python base image
-FROM python:3.10-slim
+# Adobe Hackathon Round 1B: Persona-Driven Document Intelligence
 
-# Install system dependencies required for PyMuPDF
-RUN apt-get update && apt-get install -y build-essential libmupdf-dev && rm -rf /var/lib/apt/lists/*
+## 🎯 Overview
 
-# Copy and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+This project implements a **Persona-Driven Document Intelligence System** for Adobe Hackathon Round 1B. The system analyzes PDF documents and extracts the most relevant sections based on a specific user persona and their job-to-be-done, using advanced semantic embeddings and ranking algorithms.
 
-# Copy the application code into the container
-COPY app /app
-WORKDIR /app
+## 🚀 Challenge Requirements
 
-# Define the command to run the application
-CMD ["python", "main.py"]
-Use code with caution.
-Dockerfile
-✅ Polishing & Enhancements
-Enhancement	Benefit
-Parallelized PDF parsing	Provides a 2–4x speedup on the segmentation process.
-Chunk filtering	Reduces noise from irrelevant document elements like headers and footers.
-Soft keyword boosting in scoring	Improves semantic relevance, especially for nuanced queries.
-Embedding caching (joblib)	Accelerates development cycles and ensures reproducibility.
-Colored console logs (rich)	Enhances developer experience and simplifies debugging.
-JSON schema validation	Guarantees that the output structure is always consistent and reliable.
-🧪 Testing Strategy
-To run a test from the command line, use the following format:
-Generated bash
-# Test with a local file and persona query
-python main.py --pdf "./test/sample.pdf" --persona "Marketing Lead" --query "Insights for customer retention"
-Use code with caution.
-Bash
-This will produce:
-An output/persona_result.json file.
-A console printout of the top 5 ranked chunks with their headings and scores.
-Sample Output Snippet
-Generated json
+**Theme**: "Connect What Matters — For the User Who Matters"
+
+The system acts as an intelligent document analyst that:
+- Processes 3-10 related PDF documents
+- Takes a **persona** (user role/expertise) and **job-to-be-done** (specific task)
+- Extracts and ranks the most relevant sections using semantic analysis
+- Outputs structured JSON with ranked sections and sub-section analysis
+
+### Sample Test Cases from Challenge:
+1. **Academic Research**: PhD Researcher analyzing Graph Neural Networks papers for literature review
+2. **Business Analysis**: Investment Analyst examining annual reports for revenue trends
+3. **Educational Content**: Chemistry Student identifying key concepts from textbooks
+
+## 📋 System Architecture
+
+### Four-Stage Pipeline:
+
+1. **📚 Document Processing**: Extract content using Round 1A outlines or generate new ones
+2. **🧠 Semantic Embeddings**: Create query embeddings from persona+JBTD and content embeddings
+3. **🏆 Ranking Analysis**: Multi-level ranking of sections and sub-sections
+4. **📝 Output Generation**: Structured JSON with metadata and ranked results
+
+## 🛠️ Installation & Setup
+
+### Prerequisites
+- Python 3.9+
+- Docker (for containerized execution)
+- 8GB+ RAM, CPU-only execution
+
+### Quick Setup
+```bash
+# Clone the repository
+git clone https://github.com/devansh4565/adobe-hackathon-1B.git
+cd adobe-hackathon-1B
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Download the model (if not already present)
+python download_model.py
+```
+
+## 💡 Usage
+
+### Method 1: Command Line Arguments ✨ **RECOMMENDED**
+```bash
+python main_round1b.py \
+  --persona "PhD Researcher in Computational Biology" \
+  --jbtd "Prepare a comprehensive literature review focusing on methodologies, datasets, and performance benchmarks"
+```
+
+### Method 2: Environment Variables 🐳 **DOCKER FRIENDLY**
+```bash
+export PERSONA="Investment Analyst"
+export JBTD="Analyze revenue trends, R&D investments, and market positioning strategies"
+python main_round1b.py
+```
+
+### Method 3: Input Files (Backward Compatibility)
+Create these files in your input directory:
+- `persona.txt` - Contains persona description
+- `job_to_be_done.txt` - Contains job-to-be-done description
+
+```bash
+python main_round1b.py
+```
+
+### Method 4: Custom Directories
+```bash
+python main_round1b.py \
+  --input-dir ./my_input \
+  --output-dir ./my_output \
+  --persona "Undergraduate Chemistry Student" \
+  --jbtd "Identify key concepts for exam preparation"
+```
+
+## 🐳 Docker Usage
+
+### Build the Image
+```bash
+docker build --platform linux/amd64 -t adobe-hackathon-1b:latest .
+```
+
+### Run with Environment Variables (Recommended)
+```bash
+docker run --rm \
+  -e PERSONA="PhD Researcher in Computational Biology" \
+  -e JBTD="Prepare comprehensive literature review" \
+  -v $(pwd)/input:/input \
+  -v $(pwd)/output:/output \
+  --network none \
+  adobe-hackathon-1b:latest
+```
+
+### Run with Command Arguments
+```bash
+docker run --rm \
+  -v $(pwd)/input:/input \
+  -v $(pwd)/output:/output \
+  --network none \
+  adobe-hackathon-1b:latest \
+  python main_round1b.py \
+    --persona "Investment Analyst" \
+    --jbtd "Analyze revenue trends and market positioning"
+```
+
+### Challenge Execution Format
+```bash
+docker run --rm \
+  -v $(pwd)/input:/input \
+  -v $(pwd)/output:/output \
+  --network none \
+  adobe-hackathon-1b:latest
+```
+
+## 📁 Project Structure
+
+```
+adobe-hackathon-1B/
+├── main_round1b.py           # Main orchestration module
+├── content_segmenter.py      # Document content extraction
+├── semantic_embedder.py      # Embedding creation and similarity
+├── ranking_engine.py         # Multi-level ranking algorithms
+├── main.py                   # Round 1A outline generation (fallback)
+├── process_docs.py           # PDF text extraction utilities
+├── download_model.py         # Model download script
+├── dockerfile                # Docker configuration
+├── requirements.txt          # Python dependencies
+├── local_model/              # Pre-downloaded sentence transformer model
+├── input/                    # Input PDFs and persona files
+├── output/                   # Generated outlines and results
+├── round1b_output/           # Round 1B specific outputs
+├── test_new_interface.py     # Interface testing script
+└── README.md                 # This file
+```
+
+## 📤 Input Specification
+
+### Required Inputs:
+1. **PDFs**: 3-10 related PDF documents in input directory
+2. **Persona**: User role description (e.g., "PhD Researcher in Biology")
+3. **Job-to-be-Done**: Specific task (e.g., "Prepare literature review")
+
+### Input Methods (Priority Order):
+1. **Command Line**: `--persona "..."` `--jbtd "..."`
+2. **Environment**: `PERSONA="..."` `JBTD="..."`
+3. **Files**: `persona.txt`, `job_to_be_done.txt`
+4. **Defaults**: "document analyst", "extract relevant information"
+
+## 📊 Output Format
+
+### Generated Files:
+- `output.json` - Main results file
+- Individual PDF outline files (if generated)
+
+### JSON Structure:
+```json
 {
-  "persona": "Marketing Lead",
-  "query": "Customer Retention Techniques",
-  "sections": [
+  "metadata": {
+    "input_documents": ["doc1.pdf", "doc2.pdf"],
+    "persona": "PhD Researcher in Biology",
+    "job_to_be_done": "Prepare literature review",
+    "processing_timestamp": "2025-01-27T...",
+    "model_info": {...}
+  },
+  "extracted_sections": [
     {
-      "title": "Customer Loyalty Strategies",
-      "text": "To retain customers, we focus on personalized outreach...",
-      "score": 0.892
-    },
+      "document": "doc1.pdf",
+      "page_number": 5,
+      "section_title": "Methodology",
+      "importance_rank": 1,
+      "relevance_score": 0.95,
+      "content": "..."
+    }
+  ],
+  "subsection_analysis": [
     {
-      "title": "Retention Metrics",
-      "text": "We track CLTV and churn rate to measure success...",
-      "score": 0.843
+      "document": "doc1.pdf",
+      "page_number": 5,
+      "refined_text": "Key methodological insights...",
+      "relevance_score": 0.92
     }
   ]
 }
-Use code with caution.
-Json
-This project is engineered for speed, robustness, and scalability, making it an ideal foundation for more advanced features like OCR fallback or interactive Q&A systems. The validated JSON outputs are designed for seamless integration into any downstream UX/UI.
+```
+
+## 🧪 Testing
+
+### Test the Interface
+```bash
+python test_new_interface.py
+```
+
+### Run Sample Tests
+```bash
+# Academic Research Test
+python main_round1b.py \
+  --persona "PhD Researcher in Computational Biology" \
+  --jbtd "Prepare a comprehensive literature review focusing on methodologies, datasets, and performance benchmarks"
+
+# Business Analysis Test  
+python main_round1b.py \
+  --persona "Investment Analyst" \
+  --jbtd "Analyze revenue trends, R&D investments, and market positioning strategies"
+
+# Educational Test
+python main_round1b.py \
+  --persona "Undergraduate Chemistry Student" \
+  --jbtd "Identify key concepts and mechanisms for exam preparation on reaction kinetics"
+```
+
+### Help Command
+```bash
+python main_round1b.py --help
+```
+
+## ⚙️ Configuration
+
+### Environment Variables:
+- `PERSONA` - User persona description
+- `JBTD` or `JOB_TO_BE_DONE` - Job-to-be-done description
+
+### Command Line Options:
+- `--persona, -p` - Persona description
+- `--jbtd, -j` - Job-to-be-done description  
+- `--input-dir, -i` - Input directory path
+- `--output-dir, -o` - Output directory path
+
+## 🎯 Challenge Compliance
+
+### ✅ Requirements Met:
+- **Model size**: ≤ 1GB (sentence transformer ~384MB)
+- **Processing time**: ≤ 60 seconds for 3-5 documents
+- **CPU only**: No GPU dependencies
+- **Offline**: No internet access during execution
+- **Platform**: AMD64 compatible
+- **Generic solution**: Handles diverse personas and tasks
+
+### ✅ Scoring Criteria:
+- **Section Relevance (60 points)**: Semantic ranking with persona+JBTD context
+- **Sub-Section Relevance (40 points)**: Granular analysis and ranking
+
+## 🔧 Development
+
+### Key Components:
+
+1. **PersonaDrivenDocumentIntelligence**: Main orchestrator class
+2. **ContentSegmenter**: Extracts content from PDFs using outlines
+3. **SemanticEmbedder**: Creates and manages sentence embeddings
+4. **RankingEngine**: Multi-level ranking and analysis
+
+### Model Information:
+- **Model**: Sentence Transformer (all-MiniLM-L6-v2)
+- **Embedding Dimension**: 384
+- **Max Sequence Length**: 256 tokens
+- **Size**: ~384MB
+
+## 🚨 Troubleshooting
+
+### Common Issues:
+
+1. **Missing Model**: Run `python download_model.py`
+2. **No PDFs Found**: Check input directory path
+3. **Memory Issues**: Reduce batch size in embeddings
+4. **Docker Platform**: Ensure `--platform linux/amd64`
+
+### Debug Mode:
+```bash
+python main_round1b.py --persona "Test" --jbtd "Test" -v
+```
+
+## 📚 Documentation
+
+- `README_Round1B_Updated.md` - Detailed interface documentation
+- `approach_explanation.md` - Technical methodology (300-500 words)
+- Inline code documentation with docstrings
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make changes with tests
+4. Submit a pull request
+
+## 📄 License
+
+This project is part of the Adobe India Hackathon 2025.
+
+## 🏆 Adobe Hackathon Round 1B Challenge
+
+**"Connecting the Dots"** - Rethink Reading. Rediscover Knowledge.
+
+This system transforms static PDFs into intelligent, persona-aware documents that understand context and surface the most relevant insights for each user's specific needs.
+
+---
+
+**Ready to connect the dots? Let's build the future of document intelligence! 🚀**
