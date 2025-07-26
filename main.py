@@ -117,7 +117,7 @@ def main(input_dir: str, output_dir: str):
         if filename.lower().endswith(".pdf"):
             pdf_path = os.path.join(input_dir, filename)
             print(f"Processing: {filename}")
-                data = process_pdf(pdf_path)
+            data = process_pdf(pdf_path)
             if data:
                 json_path = os.path.join(output_dir, os.path.splitext(filename)[0] + ".json")
                 with open(json_path, 'w', encoding='utf-8') as f:
