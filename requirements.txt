@@ -1,2 +1,12 @@
-PyMuPDF==1.24.1
-sentence-transformers==2.7.0
+rich
+numpy
+joblib
+PyMuPDF
+fastapi
+pydantic
+uvicorn[standard]
+python-multipart
+sentence-transformers
+torch
+transformers
+scikit-learn

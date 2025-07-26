@@ -1,0 +1,66 @@
+{
+  "metadata": {
+    "input_documents": [
+      "research_paper_1.pdf",
+      "research_paper_2.pdf",
+      "research_paper_3.pdf",
+      "research_paper_4.pdf"
+    ],
+    "persona": "PhD Researcher in Computational Biology",
+    "job_to_be_done": "Prepare a comprehensive literature review focusing on methodologies, datasets, and performance benchmarks",
+    "processing_timestamp": "2025-01-27T12:00:00",
+    "model_info": {
+      "max_seq_length": 256,
+      "embedding_dimension": 384,
+      "model_name": "all-MiniLM-L6-v2"
+    }
+  },
+  "extracted_section": [
+    {
+      "document": "research_paper_1.pdf",
+      "page_number": 3,
+      "section_title": "Methodology",
+      "importance_rank": 1
+    },
+    {
+      "document": "research_paper_2.pdf",
+      "page_number": 2,
+      "section_title": "Experimental Setup",
+      "importance_rank": 2
+    },
+    {
+      "document": "research_paper_3.pdf",
+      "page_number": 4,
+      "section_title": "Results and Analysis",
+      "importance_rank": 3
+    },
+    {
+      "document": "research_paper_4.pdf",
+      "page_number": 1,
+      "section_title": "Introduction",
+      "importance_rank": 4
+    }
+  ],
+  "sub-section_analysis": [
+    {
+      "document": "research_paper_1.pdf",
+      "page_number": 3,
+      "refined_text": "Our proposed methodology utilizes a novel graph neural network architecture that incorporates attention mechanisms for drug-target interaction prediction. The model achieves state-of-the-art performance on benchmark datasets with an accuracy of 94.2%."
+    },
+    {
+      "document": "research_paper_2.pdf",
+      "page_number": 2,
+      "refined_text": "The experimental setup includes comprehensive evaluation on three major drug discovery datasets: BindingDB, ChEMBL, and DrugBank. We employ 5-fold cross-validation and report results across multiple performance metrics including AUC-ROC, precision, and recall."
+    },
+    {
+      "document": "research_paper_3.pdf",
+      "page_number": 4,
+      "refined_text": "Performance benchmarks show our model outperforms existing approaches by 12.3% on average across all evaluation metrics. The analysis reveals significant improvements in prediction accuracy for novel drug-target pairs."
+    },
+    {
+      "document": "research_paper_4.pdf",
+      "page_number": 1,
+      "refined_text": "Recent advances in graph neural networks have revolutionized drug discovery by enabling more accurate prediction of drug-target interactions. This work presents a comprehensive review of current methodologies and their applications in computational biology."
+    }
+  ]
+} 

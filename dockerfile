@@ -1,22 +1,26 @@
-# Use a standard Python base image
-FROM python:3.9-slim
+# Use Python 3.9 slim image for compatibility
+FROM --platform=linux/amd64 python:3.9-slim
 
+# Set working directory
 WORKDIR /app
 
-# Copy the requirements file and install dependencies
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# --- Include the Model for Offline Use ---
-# Set an environment variable to tell the library where to find the model cache
-ENV TRANSFORMERS_CACHE="/app/model_cache"
-# Copy the locally saved model files into the specified cache directory
-COPY ./model_cache /app/model_cache
+# Copy the pre-downloaded model into the image's filesystem
+COPY local_model /app/local_model
 
-# Copy the rest of your application
-COPY . .
+# Copy application source code
+COPY *.py /app/
 
-# Set the command to run when the container starts
-# Note: You'll need to adapt this if your script needs command-line arguments
-# for persona, job, etc.
-CMD ["python", "process_docs.py"]
+# Create input and output directories
+RUN mkdir -p /input /output
+
+# Set the default command to run the Round 1B system
+CMD ["python", "/app/main_round1b.py"]
